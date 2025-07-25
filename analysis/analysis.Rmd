@@ -1,0 +1,323 @@
+---
+title: "Trustworthiness assessment of Gloster et al. (2020) 'Treating treatment non-responders: A meta-analysis of randomized controlled psychotherapy trials'"
+author: "Ian Hussey"
+output: pdf_document
+abstract: "[Gloster et al. (2020)](https://doi.org/10.1016/j.cpr.2019.101810) presents the first meta-analysis of the efficacy of psychotherapy in treatment-resistant clients. Here, I present an assessment of the trustworthiness of the results presented in Gloster et al. (2020), following previous work on assessing the trustworthiness of original research (e.g., [Wilkinson et al., 2024](https://doi.org/10.1016/j.jclinepi.2024.111512), [Wilkinson et al., 2025](https://www.medrxiv.org/content/10.1101/2024.11.25.24316905v3)) and meta-analyses (e.g., [Hussey, 2025](https://doi.org/10.1016/j.jbtep.2024.102015); [Maassen et al., 2020](https://doi.org/10.1371/journal.pone.0233107)). Serious concerns are raised about the plausibility of the magnitude of the effect sizes included in the meta-analyses and the correct extraction of effect sizes from original studies. The findings arguably presented below represent clear evidence of major errors that compromise the reliability of the research findings presented in Gloster et al. (2020), therefore, following COPE guidelines, the work requires substantial correction or possibly retraction ([COPE, 2019](https://publicationethics.org/guidance/guideline/retraction-guidelines))."
+---
+
+```{r include=FALSE}
+
+# formatting options
+# set default chunk options
+knitr::opts_chunk$set(message = FALSE,
+                      echo = FALSE,
+                      warning = FALSE)
+
+# disable scientific notation
+options(scipen = 999) 
+
+# date: "`r format(Sys.time(), '%d %B, %Y')`"
+# output:
+#   html_document:
+#     code_folding: hide
+#     highlight: haddock
+#     theme: flatly
+#     toc: yes
+#     toc_float: yes
+
+```
+
+```{r}
+
+library(tidyverse)
+library(metafor)
+library(janitor)
+library(knitr)
+library(kableExtra)
+library(readxl)
+
+round_half_up_min_decimals <- function(x, digits = 2) {
+  sprintf(paste0("%.", digits, "f"), janitor::round_half_up(x, digits = digits))
+}
+
+```
+
+# Issue 1: implausibly large effect sizes
+
+SMD effect sizes (i.e., Cohen's $d$) of between 5 and 8 are extremely implausible in any RCT for psychotherapy. They are especially so here given that 1) these RCTs focus on treatment resistant patients and b) the SMD of 8 is for a one year follow up, so the improvements are not merely massive but also sustained long term.
+
+The range of the scale and estimates of its SD also suggest an SMD of 8 is extremely implausible. In clinical samples, the YMRS has an SD of about 4.5 (N = 211 patients, Targum et al. 2018; N = 209, Suppes et al. 2016). SMD = 8 means 8 SDs between the conditions, i.e., 4.5\*8 = c.36 scale points difference. The YMRS scale is a 0-60 scale, 36 points is a difference of 60% of the scale's range on average, in a treatment resistant population, and at 1 year follow up.
+
+Taken at face value, this is either the most effective psychotherapy intervention in the history of psychology, or something is amiss.
+
+The SMD information is presented in Gloster et al.'s (2020) forest plots, but it becomes more apparent if the plots do not censor the effect sizes, as they do in Gloster et al. (2020). Below I (successfully) computationally reproduce Gloster et al.'s (2020) RE meta-analysis results from their effect sizes and standard errors in order to re-plot them without censoring.
+
+## Posttreatment time point
+
+Gloster et al. (2020) RE meta analysis at post treatment time point: SMD = 0.818
+
+![Gloster et al. (2020) Figure 2](images/gloster%20fig%202%20posttreatment.png)
+
+Without censoring effect sizes in the forest plot:
+
+```{r fig.height=6, fig.width=9}
+
+data_posttreatment_original <- read_excel("../data/data gloster et al. 2020.xlsx", sheet = "posttreatment")
+
+fit_posttreatment_original <- 
+  rma(yi = yi,
+      sei = sei,
+      slab = study,
+      method = "DL",
+      data = data_posttreatment_original)
+
+#fit_posttreatment_original
+
+forest(fit_posttreatment_original, 
+       addpred = TRUE, 
+       xlab = "Standardized Mean Difference")
+
+```
+
+-   Reproduced successfully.
+-   Effect size for Isasi et al. (2010) is very implausibly large.
+-   Hinton et al. (2005), Moore & Blackburn (1997) and Watanabe et al. (2011) may also raise questions about plausibility.
+
+## Follow-up time point
+
+Gloster et al. (2020) RE meta analysis at follow-up time point: SMD = 1.189
+
+![Gloster et al. (2020) Figure 2](images/gloster%20fig%205%20fu.png)
+
+Without censoring effect sizes in the forest plot:
+
+```{r fig.height=4, fig.width=9}
+
+data_fu_original <- read_excel("../data/data gloster et al. 2020.xlsx", sheet = "fu") 
+
+fit_fu_original <- 
+  rma(yi = yi,
+      sei = sei,
+      slab = study,
+      method = "DL",
+      data = data_fu_original)
+
+#fit_fu_original
+
+forest(fit_fu_original, 
+       addpred = TRUE, 
+       xlab = "Standardized Mean Difference")
+
+```
+
+-   Reproduced successfully.
+-   Effect size for Isasi et al. (2010) is very implausibly large.
+-   Watanabe et al. (2011) may also raise questions about plausibility.
+
+# Issue 2: effect size extraction errors
+
+Implausibly large effect sizes can be caused by the confusion of Standard Errors and Standard Deviations, the former are much smaller than the latter (SD = SE \* sqrt(N)). Given that the SMD effect size puts SDs in the denominator, misuse of SEs greatly increases the estimate. This error, the "Standard Error error", is known to be prevalent in published meta-analyses (eg Maassen et al., 2020).
+
+Gloster et al. (2020) do not report the means and SDs they used to calculate the SMD effect sizes, only the Ns and the SMDs themselves. However, we can recompute them and compare the SMDs. I attempted to do this for the largest effect sizes in reported in Gloster et al.'s (2020) forest plots (figures 2 and 5).
+
+## Isasi et al. (2010)
+
+Gloster et al.'s (2020) forest plots (figures 2 and 5) include SMDs for Isasi et al. (2010) of 5.233 for postintervention and 8.02 for follow up.
+
+Inspection of Isasi et al. (2010) shows that they reported means and "te"s, whose usage is atypical and meaning is unclear:
+
+![Isasi et al. (2010) Table 2](images/isasi%202020%20tab%202.png)
+
+One possibility, given the authors are Spanish, is that te stands for "típico error" (typical error), which could be a direct translation of "standard error". I emailed the authors of Isasi et al. (2010) multiple times beginning in September asking for clarification but received no response 10 months later, except for one author who let me know that he is retired and no longer in contact with any of the other coauthors.
+
+Below, I recalculate SMDs from the N, M, and te values reported in Isasi et al. (2010) under the assumption they are a) SDs and b) SEs to assess the plausibility of each.
+
+```{r}
+
+# data
+data_isasi <- read_excel("../data/data isasi et al. 2010.xlsx") |>
+  janitor::clean_names() |>
+  filter(outcome == "YMRS") |>
+  select(outcome, group, 
+         posttreatment_n, postreatment_mean, postreatment_te, followup_n = x12_months_n, followup_mean = x12_months_mean, followup_te = x12_months_te) |>
+  pivot_wider(names_from = group,
+              values_from = c(posttreatment_n, postreatment_mean, postreatment_te, followup_n, followup_mean, followup_te))
+
+# posttreatment
+## te as SD
+data_isasi_posttreatment_sd <- data_isasi |>
+  rename(n1i = posttreatment_n_control, 
+         m1i = postreatment_mean_control, 
+         sd1i = postreatment_te_control, 
+         n2i = posttreatment_n_intervention, 
+         m2i = postreatment_mean_intervention,
+         sd2i = postreatment_te_intervention) |>
+  rowwise() |>
+  mutate(pooled_sd = sqrt(((n1i - 1) * (sd1i)^2 + (n2i - 1) * (sd2i)^2) / ((n1i) + (n2i) - 2)),
+         smd = ((m1i) - (m2i)) / pooled_sd,
+         smd_se = sqrt((n1i + n2i) / (n1i * n2i) + (smd^2 / (2 * (n1i + n2i))))) |>
+  ungroup() |>
+  select(-pooled_sd) |>
+  mutate(method = "te as SD",
+         timepoint = "posttreatment")
+
+## te as SE
+data_isasi_posttreatment_se <- data_isasi |>
+  rename(n1i = posttreatment_n_control, 
+         m1i = postreatment_mean_control, 
+         sd1i = postreatment_te_control, 
+         n2i = posttreatment_n_intervention, 
+         m2i = postreatment_mean_intervention,
+         sd2i = postreatment_te_intervention) |>
+  # assuming "te" are SE, convert to SD
+  mutate(sd1i = sd1i * sqrt(n1i),
+         sd2i = sd2i * sqrt(n2i)) |>
+  rowwise() |>
+  mutate(pooled_sd = sqrt(((n1i - 1) * (sd1i)^2 + (n2i - 1) * (sd2i)^2) / ((n1i) + (n2i) - 2)),
+         smd = ((m1i) - (m2i)) / pooled_sd,
+         smd_se = sqrt((n1i + n2i) / (n1i * n2i) + (smd^2 / (2 * (n1i + n2i))))) |>
+  ungroup() |>
+  select(-pooled_sd) |>
+  mutate(method = "te as SE",
+         timepoint = "posttreatment")
+
+# fu
+## te as SD
+data_isasi_fu_sd <- data_isasi |>
+  rename(n1i = followup_n_control, 
+         m1i = followup_mean_control, 
+         sd1i = followup_te_control, 
+         n2i = followup_n_intervention, 
+         m2i = followup_mean_intervention,
+         sd2i = followup_te_intervention) |>
+  rowwise() |>
+  mutate(pooled_sd = sqrt(((n1i - 1) * (sd1i)^2 + (n2i - 1) * (sd2i)^2) / ((n1i) + (n2i) - 2)),
+         smd = ((m1i) - (m2i)) / pooled_sd,
+         smd_se = sqrt((n1i + n2i) / (n1i * n2i) + (smd^2 / (2 * (n1i + n2i))))) |>
+  ungroup() |>
+  select(-pooled_sd) |>
+  mutate(method = "te as SD",
+         timepoint = "follow up")
+
+## te as SE
+data_isasi_fu_se <- data_isasi |>
+  rename(n1i = followup_n_control, 
+         m1i = followup_mean_control, 
+         sd1i = followup_te_control, 
+         n2i = followup_n_intervention, 
+         m2i = followup_mean_intervention,
+         sd2i = followup_te_intervention) |>
+  # assuming "te" are SE, convert to SD
+  mutate(sd1i = sd1i * sqrt(n1i),
+         sd2i = sd2i * sqrt(n2i)) |>
+  rowwise() |>
+  mutate(pooled_sd = sqrt(((n1i - 1) * (sd1i)^2 + (n2i - 1) * (sd2i)^2) / ((n1i) + (n2i) - 2)),
+         smd = ((m1i) - (m2i)) / pooled_sd,
+         smd_se = sqrt((n1i + n2i) / (n1i * n2i) + (smd^2 / (2 * (n1i + n2i))))) |>
+  ungroup() |>
+  select(-pooled_sd) |>
+  mutate(method = "te as SE",
+         timepoint = "follow up")
+
+bind_rows(
+  data_isasi_posttreatment_sd,
+  data_isasi_posttreatment_se,
+  data_isasi_fu_sd,
+  data_isasi_fu_se
+) |>
+  select(timepoint, method, n1i, m1i, sd1i, n2i, m2i, sd2i, smd) |>
+  mutate_if(is.numeric, round_half_up_min_decimals) |>
+  kable(align = "r") |>
+  kable_classic(full_width = FALSE)
+
+```
+
+-   Neither treating the "te"s as SDs nor SEs reproduces the SMDs reported in Gloster et al.'s (2020) forest plots (5.233 for postintervention, 8.02 for follow up), although treating the "te"s as SD more closely approximates the SMDs.
+-   Treating the "te"s as SEs produces implausibly large SMDs
+-   Previous studies have estimated the YMRS's SD in clinical samples to be c.4.5, which correspond roughly with treating the "te"s as SEs (N = 211 patients, Targum et al. 2018; N = 209, Suppes et al. 2016).
+-   Additionally, although not shown here for brevity, Isasi et al. (2010) reported results from other outcome measures, including the BDI which has much better understood distributions: SD in clinical populations are usually 8-12. Plausible BDI SDs were only found when treating the "te"s as SEs.
+
+## Hinton et al. (2005)
+
+Gloster et al. (2020) report the Hinton et al. (2005) effect size as "SMD = 2.22" in their forest plot (Fig 2), and state that they chose the CAPS outcome measure.
+
+I reextracted two of Hinton et al.'s (2005) outcome measures: the CAPS and also the N-PASS. The SMD reported in Hinton et al. (2005) for the CAPS did not match Gloster et al.'s (2020) value, but the value for the N-PASS did.
+
+```{r}
+
+summary_stats_hinton <- read_excel("../data/data hinton et al. 2005.xlsx", sheet = "M, SD, N") |>
+  filter(outcome %in% c("CAPS", "NPASS") & timepoint == 2) |>
+  pivot_wider(names_from = condition,
+              values_from = c(m, sd, n)) |>
+  rename(n1i = n_control, 
+         m1i = m_control, 
+         sd1i = sd_control, 
+         n2i = n_intervention, 
+         m2i = m_intervention,
+         sd2i = sd_intervention) |>
+  rowwise() |>
+  mutate(pooled_sd = sqrt(((n1i - 1) * (sd1i)^2 + (n2i - 1) * (sd2i)^2) / ((n1i) + (n2i) - 2)),
+         smd = ((m1i) - (m2i)) / pooled_sd,
+         smd_se = sqrt((n1i + n2i) / (n1i * n2i) + (smd^2 / (2 * (n1i + n2i))))) |>
+  ungroup() 
+
+summary_stats_hinton |>
+  select(outcome, smd, smd_se) |>
+  mutate_if(is.numeric, round_half_up_min_decimals) |>
+  kable(align = "r") |>
+  kable_classic(full_width = FALSE)
+
+```
+
+- The CAPS SMD could not be reproduced. 
+- However, the SMD value reported in Gloster et al. (2020) does match SMD for the N-PASS (both the value reported in Hinton et al., 2005 and recalculated here). This may be an indication that Gloster et al. (2020) either mislabelled the outcome measure selected or extracted summary statistics for the wrong outcome measure.
+
+## Moore et al. (1997) 
+
+Gloster et al. (2020) report the Moore et al. (1997) effect size as "SMD = 1.653" in their forest plot (Fig 2) and state that they extracted data for the HAM-D outcome measure (table 2). 
+
+Inspection of Moore et al. (1997) demonstrates that it used an active control condition: it compared Cognitive Therapy against antidepressant medication. A priori, an SMD of 1.65 against an active control is implausibly large.
+
+I reextracted M, SD, and N from Moore et al.'s (1997) for the HAM-D at the posttreatment time point and recalculated SMD:
+
+```{r}
+
+summary_stats_moore <- read_excel("../data/data moore et al. 1997.xlsx") |>
+  filter(outcome == "HRSD" & timepoint == 2) |>
+  pivot_wider(names_from = condition,
+              values_from = c(m, sd, n)) |>
+  rename(n1i = n_medication, 
+         m1i = m_medication, 
+         sd1i = sd_medication, 
+         n2i = n_CT, 
+         m2i = m_CT,
+         sd2i = sd_CT) |>
+  rowwise() |>
+  mutate(pooled_sd = sqrt(((n1i - 1) * (sd1i)^2 + (n2i - 1) * (sd2i)^2) / ((n1i) + (n2i) - 2)),
+         smd = ((m1i) - (m2i)) / pooled_sd,
+         smd_se = sqrt((n1i + n2i) / (n1i * n2i) + (smd^2 / (2 * (n1i + n2i))))) |>
+  ungroup() 
+
+summary_stats_moore |>
+  select(smd, smd_se) |>
+  mutate_if(is.numeric, round_half_up_min_decimals) |>
+  kable(align = "r") |>
+  kable_classic(full_width = FALSE)
+
+```
+
+- Recalculated SMD was close to zero, whereas that reported in Gloster et al. (2020) was very large (SMD = 1.653).
+
+## Watanabe et al. (2011)
+
+I was unable to obtain a copy of this article and could not attempt an effect size reextraction.
+
+# Conclusion
+
+These issues arguably represent clear evidence of major errors that compromise the reliability of the research findings presented in Gloster et al. (2020). Following COPE guidelines, the work requires substantial correction or possibly retraction ([COPE, 2019](https://publicationethics.org/guidance/guideline/retraction-guidelines)). 
+
+This assessment of the trustworthiness of the results presented in Gloster et al. (2020) is not exhaustive and other issues may be present.
+
+No attempt was made to correct these issues or consider how the conclusions of Gloster et al. (2020) would be affected or adjusted if these and any other issues present were fixed. Requiring those who highlight serious issues with published work to also solve those issues creates perverse incentives in science, as it moves the burden of proof from original authors to critics (see [Hussey, 2025](https://mmmdata.io/posts/2025/07/critique-does-not-require-solution/)).
+
+
