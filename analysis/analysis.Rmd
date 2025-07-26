@@ -320,4 +320,10 @@ This assessment of the trustworthiness of the results presented in Gloster et al
 
 No attempt was made to correct these issues or consider how the conclusions of Gloster et al. (2020) would be affected or adjusted if these and any other issues present were fixed. Requiring those who highlight serious issues with published work to also solve those issues creates perverse incentives in science, as it moves the burden of proof from original authors to critics (see [Hussey, 2025](https://mmmdata.io/posts/2025/07/critique-does-not-require-solution/)).
 
+# Data and code availability 
+
+All data and code available at https://github.com/ianhussey/verification-gloster-et-al-2020
+
+
+
 
